@@ -98,18 +98,9 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  masked_dW = np.ma.masked_array(
-    np.broadcast_to(X.reshape(num_train, num_pixels, 1), (num_train, num_pixels, num_classes)),
-    np.broadcast_to(positive_margins.mask.reshape(num_train, 1, num_classes), (num_train, num_pixels, num_classes))
-  )
-  correct_X = np.ma.masked_array(
-    np.broadcast_to(X.reshape(num_train, num_pixels, 1), (num_train, num_pixels, num_classes)),
-    np.broadcast_to(np.logical_not(incorrect_scores.mask).reshape(num_train, 1, num_classes), (num_train, num_pixels, num_classes))
-  )
-
-  negative_dW = correct_X * np.sum(np.logical_not(positive_margins.mask), 1).reshape(num_train, 1, 1)
-
-  dW = (np.sum(masked_dW, 0) - np.sum(negative_dW, 0)) / num_train + reg * W
+  margin_count = np.sum(np.logical_not(positive_margins.mask), 1).reshape(num_train, 1)
+  correct_count = margin_count * incorrect_scores.mask
+  dW = X.T.dot(np.logical_not(positive_margins.mask) - correct_count) / num_train + reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
