@@ -104,12 +104,12 @@ def svm_loss_vectorized(W, X, y, reg):
   )
   correct_X = np.ma.masked_array(
     np.broadcast_to(X.reshape(num_train, num_pixels, 1), (num_train, num_pixels, num_classes)),
-    np.logical_not(np.broadcast_to(incorrect_scores.mask.reshape(num_train, 1, num_classes), (num_train, num_pixels, num_classes)))
+    np.broadcast_to(np.logical_not(incorrect_scores.mask).reshape(num_train, 1, num_classes), (num_train, num_pixels, num_classes))
   )
 
   negative_dW = correct_X * np.sum(np.logical_not(positive_margins.mask), 1).reshape(num_train, 1, 1)
 
-  dW = np.sum(masked_dW, 0) - np.sum(negative_dW, 0) / num_train + reg * W
+  dW = (np.sum(masked_dW, 0) - np.sum(negative_dW, 0)) / num_train + reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
