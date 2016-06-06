@@ -73,7 +73,8 @@ def softmax_loss_vectorized(W, X, y, reg):
   scores = X.dot(W)
   total_exp = np.sum(np.exp(scores), 1)
   loss = -np.sum(np.log(np.exp(scores[range(num_trains),y]) / total_exp)) / num_trains + 0.5 * reg * np.sum(W * W)
-  numerator_dW = np.bincount((y.reshape(num_trains, 1) + (np.arange(num_pixels) * num_classes).reshape(1, num_pixels)).reshape(num_trains * num_pixels), -X.reshape(num_trains * num_pixels)).reshape(num_pixels, num_classes)
+  output_indices = (y.reshape(num_trains, 1) + (np.arange(num_pixels) * num_classes).reshape(1, num_pixels)).reshape(num_trains * num_pixels)
+  numerator_dW = np.bincount(output_indices, -X.reshape(num_trains * num_pixels)).reshape(num_pixels, num_classes)
   denominator_dW = X.T.dot(np.exp(scores) / total_exp.reshape(num_trains, 1))
   dW = (numerator_dW + denominator_dW) / num_trains + reg * W
   #############################################################################
