@@ -74,7 +74,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    hidden_layer_active = np.ma.masked_less(X.dot(W1) + b1, 0)
+    hidden_layer_value = hidden_layer_active.filled(0)
+    scores = hidden_layer_value.dot(W2) + b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -92,7 +94,12 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    pass
+    num_trains = X.shape[0]
+    num_pixels = X.shape[1]
+    num_classes = W2.shape[1]
+    hidden_size = W2.shape[0]
+    total_exp = np.sum(np.exp(scores), 1)
+    loss = -np.sum(np.log(np.exp(scores[range(num_trains), y]) / total_exp)) / num_trains + 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -104,7 +111,34 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    output_indices = (y.reshape(num_trains, 1) + (np.arange(hidden_size) * num_classes).reshape(1, hidden_size)).reshape(hidden_size * num_trains)
+    numerator_dW2 = np.bincount(output_indices, -hidden_layer_value.reshape(num_trains * hidden_size)).reshape(hidden_size, num_classes)
+    denominator_dW2 = hidden_layer_value.T.dot(np.exp(scores) / total_exp.reshape(num_trains, 1))
+    grads["W2"] = (numerator_dW2 + denominator_dW2) / num_trains + reg * W2
+    #print(numerator_dW2.shape)
+    
+    numerator_db2 = -np.bincount(y)
+    denominator_db2 = np.sum(np.exp(scores) / total_exp.reshape(num_trains, 1), 0)
+    grads["b2"] = (numerator_db2 + denominator_db2) / num_trains
+
+    #dlog = total_exp / np.exp(scores[range(num_trains), y])
+        
+    #dnumerator = 1 / np.exp(scores[range(num_trains), y])
+    
+    #dnumerator_exp = np.sum(W2[:, y], 1)
+ 
+    #print("np.exp(W2)", W2.shape)
+    #print("np.exp(scores)", np.exp(scores).shape)
+    #print("np.exp(scores) / total_exp.reshape(num_trains, 1)", (np.exp(scores) / total_exp.reshape(num_trains, 1)).shape)
+    numerator_dh = np.sum(W2[:, y], 1)
+    denominator_dh = np.sum(W2, 1) * np.sum(np.sum(np.exp(scores), 1) / total_exp)
+    dh = (numerator_dh + denominator_dh) / num_trains
+    
+    dleru = np.sum(np.logical_not(hidden_layer_active.mask), 0) * dh
+    grads["b1"] = dleru
+    #print(numerator_dh)
+    #print(denominator_dh.shape)
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
